@@ -223,3 +223,62 @@ Validates system handles multiple attackers simultaneously
 A successful simulation of a realistic attacker system that:
 
 Sends attacks → Triggers defense → Gets trapped → Gets blocked → Logged in blockchain → Visualized live
+
+
+# Checkpoint 4 (Real-Time Client System)
+
+# 🎯 Objective
+
+Enable continuous real-time monitoring clients (laptop/mobile) that stay connected to the server and receive live security events.
+
+# ✅ Implementation
+🔗 Socket.IO Client Setup
+Python-based client using socketio
+Connects to backend server (app.py)
+Supports auto-reconnection with retry logic
+# 💻 Continuous Client System
+Persistent connection to server (runs indefinitely)
+Heartbeat mechanism added:
+Sends periodic ping every 15 seconds
+Keeps connection alive
+# 📡 Real-Time Event Listener
+
+Client receives and displays:
+
+⚠️ attack_detected → suspicious activity
+🎭 honeypot_triggered → attacker trapped
+🧬 immunity_generated → IP blocked
+# 🖥️ Device Registration
+Client identifies itself (laptop / mobile)
+Sends registration event to server
+Enables multi-device visibility on dashboard
+# 🔄 Auto-Reconnection
+Handles connection drops automatically
+Retries connection with delay strategy
+Ensures uninterrupted monitoring
+# 🧪 Multi-Client Support
+Works with:
+Laptop client
+Mobile (Termux) client
+Enables distributed monitoring system
+Simulates real SOC environment
+# ⚙️ Status
+
+✔ Continuous client working
+✔ Real-time event streaming verified
+✔ Multi-device connection supported
+✔ Auto-reconnect + heartbeat stable
+
+# 🚀 Outcome
+
+A working real-time monitoring layer that:
+
+Connects → Listens → Streams alerts → Maintains connection → Supports multiple devices
+
+# 📌 Result
+
+PhantomImmune AI now behaves like a distributed SOC system, where multiple clients can:
+
+Monitor attacks live
+Receive instant alerts
+Stay connected continuously
