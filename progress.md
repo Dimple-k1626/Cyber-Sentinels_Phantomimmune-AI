@@ -1,72 +1,77 @@
 # 🛡️ PhantomImmune AI - Progress.md
 
-## 📌 Project Components
-This project consists of two main parts:
-- Backend: `app.py` (Flask + SocketIO + Blockchain + Honeypot Engine)
-- Frontend: `dashboard.html` (Live SOC Dashboard)
+# TEAM NAME = Cyber Sentinels
 
----
+# Team Members : Dikshit.P, G.Sanjeet, Dimple.K, Dimple.S
 
-# 🚀 1. Backend Progress (app.py)
+# Problem Statement: “Current cybersecurity systems are isolated and reactive. We propose a cyber immune network that connects multiple clients to a central                             intelligence system, traps attackers using a honeypot, learns their behavior, and generates shareable immunity using a blockchain-based                            approach".
 
-## ✅ Core Setup
-- Flask server initialized
-- Socket.IO integrated for real-time communication
-- CORS enabled for frontend connection
+## 📌 Project Objective: 🎯 PhantomImmune AI – Project Objective
+The objective of PhantomImmune AI is to design and develop a self-adaptive cybersecurity defense system that can detect, analyze, and respond to cyber threats in real time using a combination of honeypot deception, automated immunity rules, and blockchain-based security logging.
+🛡️ Core Objectives
+1. Real-Time Threat Detection
+To continuously monitor incoming network requests and identify suspicious or malicious activity in real time.
+2. Intelligent Honeypot Mechanism
+To mislead attackers by redirecting suspicious IPs into a controlled honeypot environment, allowing safe observation of attack behavior.
+3. Automated Immunity System
+To automatically generate defensive rules (such as IP blocking) when repeated malicious behavior is detected, ensuring proactive protection without human intervention.
+4. Blockchain-Based Security Logging
+To maintain an immutable and tamper-proof record of all security events (attacks, blocks, and system responses) using a lightweight blockchain system.
+5. Live SOC Visualization
+To provide a real-time Security Operations Center (SOC) dashboard that visualizes:
+Attacks
+Honeypot triggers
+Immunity actions
+Blockchain updates
+6. Cybersecurity Awareness & Simulation
+To simulate real-world cyberattack scenarios for educational, research, and hackathon purposes, helping demonstrate how modern SOC systems operate.
+🚀 Final Goal
+To build a self-evolving cyber defense prototype that mimics an intelligent security ecosystem capable of:
+Detecting → Deceiving → Defending → Recording cyber threats in real time.
 
----
 
-## 🔗 Blockchain Module
-- Custom blockchain created using Python list
-- SHA-256 hashing implemented for each block
-- Each block stores:
-  - index
-  - timestamp
-  - security data (IP actions, rules)
-  - previous hash
-  - current hash
-- Real-time blockchain updates sent to dashboard via Socket.IO
+# Checkpoint 1 (Backend Core)
+🎯 Objective
 
----
+Build a working backend that detects attacks, tracks IPs, and responds in real time.
 
-## 🧠 Security Engine
-- IP request tracking system implemented
-- Honeypot detection mechanism:
-  - Triggered after threshold (3 requests)
-  - Fake admin response returned
-- Immunity system:
-  - Trigger threshold (6 requests)
-  - Automatically blocks malicious IPs
-- Permanent blocked IP storage system
+✅ Completed
+🔐 Backend Setup
+Flask + Socket.IO server created
+APIs: /login, /status, /blockchain
+🧠 Threat Detection
+IP request tracking implemented
+Rules:
+Honeypot → > 3 requests
+Block/IP immunity → > 6 requests
+🪤 Honeypot System
+Suspicious IPs diverted to honeypot
+Fake admin response + full logging
+🛡️ Immunity System
+Auto-block malicious IPs
+Rule generated and stored in memory
+⛓️ Blockchain Logging
+Each security action stored as a block
+SHA-256 hashing used
+Real-time updates via Socket.IO
+📡 Real-Time Events
+attack_detected
+honeypot_triggered
+immunity_generated
+blockchain_updated
+⚙️ Status
 
----
+✔ Backend fully working
+✔ Real-time system active
+✔ Security logic implemented
 
-## 📡 API Endpoints
-- `/login` → Simulates attack/login requests
-- `/status` → Returns system health metrics
-- `/blockchain` → Returns full blockchain data
+🚀 Result
 
----
+A working cyber defense backend prototype that:
 
-## ⚡ Real-Time Events (Socket.IO)
-- attack_detected
-- honeypot_triggered
-- immunity_generated
-- blockchain_updated
-- connect / disconnect handling
+Detects → Traps → Blocks → Logs → Streams events in real time
 
----
-
-## 🧪 Backend Status
-✔ Honeypot logic working  
-✔ IP blocking system working  
-✔ Blockchain generation working  
-✔ Real-time events streaming working  
-✔ API endpoints tested  
-
----
-
-# 🌐 2. Frontend Progress (dashboard.html)
+# Checkpoint 2 Frontend Progress (dashboard.html)
 
 ## 🎨 UI Design (SOC Dashboard)
 - Cybersecurity-themed UI designed
@@ -128,25 +133,4 @@ All counters update in real time.
 ✔ UI fully responsive  
 ✔ SOC visualization complete  
 
----
-
-# 🏁 Overall Project Status
-
-## 🔥 Current Stage: MVP COMPLETED
-The system successfully demonstrates:
-- Real-time cyber attack simulation
-- Honeypot deception mechanism
-- Automatic IP blocking (immunity system)
-- Blockchain-based security logging
-- Live SOC dashboard visualization
-
----
-
-## 📌 Summary
-PhantomImmune AI is a **real-time cyber defense prototype** combining:
-- Security monitoring (SOC system)
-- AI-like defensive behavior (rule-based)
-- Blockchain logging
-- Live attack visualization
-
----
+# Checkpoint 3 
