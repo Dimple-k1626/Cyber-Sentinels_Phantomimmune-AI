@@ -135,7 +135,7 @@ All counters update in real time.
 
 # Checkpoint 3 Laptop Brute Force Attacker
 
-🎯 Objective
+# 🎯 Objective
 Simulate a real-world brute-force attack from a laptop to test multi-IP detection, honeypot triggering, and automatic blocking.
 
 ✅ Implementation
@@ -152,7 +152,7 @@ Simulates brute-force password attacks
 
 
 
-🔄 Attack Behavior
+# 🔄 Attack Behavior
 
 
 Configurable attempts (default: 8 attempts)
@@ -166,7 +166,7 @@ Adds delay (0.6s) for realistic attack simulation
 
 
 
-📊 Response Phases Observed
+# 📊 Response Phases Observed
 
 
 401 → ❌ Invalid credentials
@@ -200,7 +200,7 @@ Events visible on live SOC dashboard
 
 
 
-🌐 Multi-Source Testing
+# 🌐 Multi-Source Testing
 
 
 Works alongside mobile (Termux) attacker
@@ -213,13 +213,13 @@ Validates system handles multiple attackers simultaneously
 
 
 
-⚙️ Status
+# ⚙️ Status
 ✔ Brute-force simulation working
 ✔ Honeypot triggering verified
 ✔ Auto-blocking verified
 ✔ Real-time dashboard updates confirmed
 
-🚀 Outcome
+# 🚀 Outcome
 A successful simulation of a realistic attacker system that:
 
 Sends attacks → Triggers defense → Gets trapped → Gets blocked → Logged in blockchain → Visualized live
