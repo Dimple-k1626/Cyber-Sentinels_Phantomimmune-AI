@@ -1,254 +1,235 @@
 # Cyber-Sentinels_Phantomimmune-AI
 
-# 🧬 PhantomImmune AI
-
-### A Self-Evolving Cyber Immune System with Active Deception + Blockchain Security
-
----
+# 🛡️ PhantomImmune AI — Cyber Immune Network
 
 ## 🚀 Overview
 
-**PhantomImmune AI** is an intelligent cybersecurity system inspired by the biological immune system, enhanced with **Blockchain-based threat logging**.
-
-It not only detects and responds to cyber threats in real-time but also **stores every attack immutably**, ensuring transparency and tamper-proof security records.
-
----
-
-## 🧠 Core Concept
-
-> Detect → Classify → Respond → Record → Learn
-
-* **Detect** → Identify suspicious activity
-* **Classify** → Assign threat level
-* **Respond** → Take automated action
-* **Record** → Store event in blockchain
-* **Learn** → (Future) Improve using AI
+PhantomImmune AI is a **real-time cybersecurity prototype** that mimics a biological immune system.
+It detects cyber attacks, traps attackers using a honeypot, learns from their behavior, generates immunity, and visualizes everything through a live dashboard.
 
 ---
 
-## ⚙️ Features
+## 🧠 Key Idea
 
-### 🔗 Real-Time Multi-Client System
+Instead of simply blocking attackers, the system:
 
-* Socket.IO based communication
-* Supports multiple devices (Laptop + Mobile)
-* Auto-reconnection + heartbeat system
-
----
-
-### 🧠 Threat Classification Engine
-
-* Categorizes threats into:
-
-  * LOW ⚪
-  * MEDIUM 🟡
-  * HIGH 🔴
-* Based on attack behavior and frequency
+* Detects suspicious activity
+* Engages attackers in a honeypot
+* Learns from their behavior
+* Generates **digital immunity (defense rules)**
+* Records actions using a **blockchain-inspired system**
 
 ---
 
-### 🛡️ Automated Immune Response
+## 🎯 Features
 
-* System reacts instantly:
+* ⚠️ **Attack Detection**
+  Tracks request patterns and identifies suspicious activity
 
-  * LOW → Monitor
-  * MEDIUM → Honeypot redirection
-  * HIGH → Block attacker
+* 🎭 **Honeypot Engine**
+  Traps attackers by simulating a fake admin system
+
+* 🧬 **Immunity Generator**
+  Converts attack behavior into protection rules
+
+* 🔗 **Blockchain Logging**
+  Stores immunity rules in a tamper-resistant chain
+
+* 📊 **Real-Time Dashboard**
+  Visualizes system activity live
 
 ---
 
-### 🎭 Active Deception (Honeypots)
+## 📊 Dashboard Highlights
 
-* Traps attackers in simulated environments
-* Helps analyze malicious behavior
+The dashboard provides real-time insights:
+
+* ⚠️ Attacks Detected
+* 🎭 Honeypot Triggers
+* 🧬 Immunity Rules Generated
+* 🔗 Blockchain Blocks Created
+
+### 🔌 Connected Clients
+
+Displays active devices connected to the system
+(Currently shows local admin dashboard)
+
+### 📡 Real-Time Event Stream
+
+Live logs including:
+
+* System connection events
+* Attack detection
+* Honeypot activation
+* Immunity generation
+* Blockchain updates
 
 ---
 
-### 🔐 Blockchain-Based Security Logging ✅
+## 🧱 System Architecture
 
-All attack events are stored in a blockchain structure inside `app.py`.
+```text
+Attacker → Server (Detection)
+                 ↓
+            Honeypot
+                 ↓
+        Immunity Generator
+                 ↓
+          Blockchain Log
+                 ↓
+            Dashboard
+```
 
-#### 🔗 Block Structure:
+---
+
+## ⚙️ How It Works
+
+### 1. Detection
+
+* Tracks number of requests per IP
+* Flags suspicious behavior after threshold
+
+---
+
+### 2. Honeypot Activation
+
+* Suspicious users are not blocked immediately
+* They are redirected to a fake admin system
+
+---
+
+### 3. Behavior Logging
+
+System records:
+
+* IP address
+* Request payload
+* Attempt count
+* Timestamp
+
+---
+
+### 4. Immunity Generation
+
+* Creates rule:
+
+  * Block malicious IP
+* Updates system protection
+
+---
+
+### 5. Blockchain Logging
+
+* Stores immunity rule in a block
+* Ensures traceability and integrity
+
+---
+
+### 6. Dashboard Visualization
+
+* Displays all actions in real time
+* Provides system transparency
+
+---
+
+## 🧪 Example Flow
+
+```text
+Attack → Detected → Honeypot Triggered
+       → Immunity Generated → Blockchain Updated
+       → Displayed on Dashboard
+```
+
+---
+
+## 🛠️ Tech Stack
+
+* Python (Flask) 🐍
+* Flask-SocketIO ⚡
+* HTML/CSS/JS Dashboard 💻
+* Blockchain (Lightweight Simulation) 🔗
+
+---
+
+## ▶️ How to Run
+
+```bash
+pip install flask flask-socketio
+python server.py
+```
+
+Open:
+
+```
+http://127.0.0.1:5000
+```
+
+---
+
+## 📡 API Endpoint
+
+### POST `/login`
+
+#### Request:
 
 ```json
 {
-  "index": 1,
-  "timestamp": "2026-04-28 10:30:00",
-  "data": {
-    "ip": "192.168.1.10",
-    "event": "attack_detected",
-    "level": "HIGH"
-  },
-  "previous_hash": "abc123",
-  "hash": "def456"
+  "username": "admin",
+  "password": "hack"
 }
 ```
 
-#### ⚡ Features:
+#### Response:
 
-* Immutable attack logs
-* Tamper-proof history
-* Linked blocks using hashes
-* Transparent event tracking
+* Normal:
 
----
+```json
+{"status": "failed"}
+```
 
-### 🌐 Multi-Device Awareness
+* Honeypot:
 
-* Tracks connected clients
-* Maintains:
-
-  * Device status
-  * Last seen timestamps
-* Enables distributed cyber defense
-
----
-
-### 📊 Real-Time Dashboard
-
-* Displays:
-
-  * Active devices
-  * Threat feed
-  * Immune responses
-* SOC-style monitoring
-
----
-
-## 🏗️ Tech Stack
-
-| Layer          | Technology                 |
-| -------------- | -------------------------- |
-| Backend        | Python (Flask + Socket.IO) |
-| Frontend       | HTML, CSS, JavaScript      |
-| Communication  | WebSockets                 |
-| Security Layer | Custom Blockchain (Python) |
-
----
-
-## 📁 Project Structure
-
-```bash
-PhantomImmune-AI/
-│── backend/
-│   ├── app.py              # Server + Blockchain logic
-│
-│── clients/
-│   ├── client.py
-│   ├── continuous_client.py
-│
-│── frontend/
-│   ├── index.html
-│
-│── progress.md
-│── README.md
+```json
+{"status": "success", "msg": "Welcome Admin"}
 ```
 
 ---
 
-## ⚡ Getting Started
+## 💡 Innovation
 
-### 1️⃣ Clone Repository
+This system transforms cybersecurity from:
 
-```bash
-git clone https://github.com/Dimple-k1626/Cyber-Sentinels_Phantomimmune-AI.git
-cd Phantomimmune-AI
-```
-
----
-
-### 2️⃣ Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
+❌ Reactive blocking
+➡️
+✅ Proactive learning + adaptive defense
 
 ---
 
-### 3️⃣ Run Server
+## 🔮 Future Enhancements
 
-```bash
-python app.py
-```
-
----
-
-### 4️⃣ Run Clients
-
-```bash
-python client.py
-```
-
-```bash
-python continuous_client.py
-```
+* 🌐 Multi-client protection network
+* 🤖 AI-based attack classification
+* 📍 Attacker geolocation tracking
+* 🔐 Distributed blockchain network
 
 ---
 
-## 🧪 Example Output
+## 🏆 Hackathon Value
 
-```bash
-⚠️ [HIGH] 192.168.1.10 → Intrusion detected
-🎭 Honeypot triggered
-🛡️ BLOCKED attacker
-⛓️ Block added to blockchain
-```
+* Real-time working system
+* Unique concept: **Cyber Immune Network**
+* Combines:
 
----
-
-## 🔗 How Blockchain Works in This Project
-
-1. Attack is detected
-2. Threat level is classified
-3. Action is taken (block/honeypot/monitor)
-4. Event is stored as a **new block**
-5. Block is hashed and linked to previous block
+  * Detection
+  * Deception
+  * Learning
+  * Visualization
 
 ---
 
-## 🧭 Roadmap
+## 🎤 One-Line Pitch
 
-### ✅ Completed
-
-* Real-time communication
-* Threat detection & classification
-* Automated immune response
-* Blockchain logging
-
-### 🔄 Next
-
-* AI-based anomaly detection
-* Predictive threat intelligence
+> “We don’t just block hackers — we trap them, learn from them, and turn their attacks into protection.”
 
 ---
 
-## 🏆 Hackathon Advantages
-
-✅ Bio-inspired cyber defense
-✅ Real-time distributed system
-✅ Active deception (honeypots)
-✅ Blockchain-based security logging 🔥
-✅ Highly scalable architecture
-
----
-
-## 🤝 Contributors
-
-* Team Cyber Sentinels
-
----
-
-## 📜 License
-
-For educational and hackathon use
-
----
-
-## ⭐ Final Note
-
-PhantomImmune AI is not just a detection system —
-it is a **self-evolving cyber defense organism**.
-
----
-
-🔥 *Securing systems like an immune system — now with Blockchain trust.*
