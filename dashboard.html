@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhantomImmune AI | SOC Dashboard</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e17; --card: #111827; --border: #1f2937;
+            --cyan: #06b6d4; --purple: #8b5cf6; --green: #10b981; --red: #ef4444; --orange: #f59e0b;
+            --text: #f3f4f6; --text-dim: #9ca3af;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        
+        /* Layout */
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        h1 { font-size: 2rem; background: linear-gradient(to right, var(--cyan), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .status-badge { padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .status-badge.online { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
+        .status-badge.offline { background: rgba(239, 68, 68, 0.2); color: var(--red); border: 1px solid var(--red); }
+        .pulse { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(currentColor, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(currentColor, 0); } 100% { box-shadow: 0 0 0 0 rgba(currentColor, 0); } }
+
+        /* Grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; position: relative; overflow: hidden; }
+        .card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; }
+        .card.cyan::before { background: var(--cyan); }
+        .card.purple::before { background: var(--purple); }
+        .card.green::before { background: var(--green); }
+        .card.orange::before { background: var(--orange); }
+        .card-title { font-size: 0.9rem; color: var(--text-dim); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .card-value { font-size: 2.5rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+        .cyan .card-value { color: var(--cyan); } .purple .card-value { color: var(--purple); }
+        .green .card-value { color: var(--green); } .orange .card-value { color: var(--orange); }
+
+        /* Clients Section */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-title { font-size: 1.2rem; font-weight: 600; color: var(--cyan); }
+        .client-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+        .client-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
+        .client-card:hover { border-color: var(--purple); transform: translateY(-2px); }
+        .client-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--cyan), var(--purple)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .client-info { flex: 1; }
+        .client-name { font-weight: 600; }
+        .client-ip { font-size: 0.8rem; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 5px var(--green); }
+
+        /* Events Stream */
+        .events-container { background: var(--card); border: 1px solid var(--border); border-radius: 12px; height: 400px; display: flex; flex-direction: column; }
+        .events-header { padding: 15px; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--purple); display: flex; justify-content: space-between; }
+        .events-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .event-item { padding: 10px 15px; margin-bottom: 8px; border-radius: 6px; background: rgba(255,255,255,0.03); border-left: 3px solid var(--text-dim); font-size: 0.9rem; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .event-item.attack { border-color: var(--cyan); }
+        .event-item.honeypot { border-color: var(--purple); background: rgba(139, 92, 246, 0.1); }
+        .event-item.immunity { border-color: var(--green); background: rgba(16, 185, 129, 0.1); }
+        .event-item.blockchain { border-color: var(--orange); }
+        .event-time { float: right; color: var(--text-dim); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; }
+
+        /* Severity Badges */
+.severity-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 10px;
+    border: 1px solid;
+}
+
+.severity-badge.critical {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border-color: #ef4444;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+.severity-badge.high {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border-color: #f59e0b;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+.severity-badge.medium {
+    background: rgba(139, 92, 246, 0.15);
+    color: #8b5cf6;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+}
+
+.severity-badge.low {
+    background: rgba(6, 182, 212, 0.15);
+    color: #06b6d4;
+    border-color: #06b6d4;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+}
+
+.severity-badge.info {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border-color: #10b981;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+/* Pulse animation for critical badges */
+@keyframes badgePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.severity-badge.critical {
+    animation: badgePulse 2s infinite;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ PhantomImmune AI</h1>
+            <div id="connectionStatus" class="status-badge offline"><div class="pulse"></div> Disconnected</div>
+            
+        </header>
+        <!-- Last Updated Timestamp -->
+<div style="display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px 20px; margin-bottom: 20px; 
+            background: rgba(255,255,255,0.03); 
+            border: 1px solid var(--border); 
+            border-radius: 10px; 
+            font-size: 0.85rem;">
+    
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; 
+                     background: var(--green); 
+                     animation: pulse 1.5s infinite;"></span>
+        <span style="color: var(--text-dim);">Monitoring active</span>
+    </div>
+    
+    <div style="color: var(--text-dim);">
+        Last updated: <strong id="lastUpdated" style="color: var(--text); font-family: 'JetBrains Mono', monospace;">--:--:--</strong>
+    </div>
+    <span style="color: var(--text-dim); margin-left: 20px; border-left: 1px solid var(--border); padding-left: 20px;">
+    Uptime: <strong id="uptime" style="color: var(--cyan); font-family: 'JetBrains Mono', monospace;">00:00:00</strong>
+</span>
+</div>
+
+        <!-- Stats Grid -->
+        <div class="grid">
+            <div class="card cyan"><div class="card-title">⚠️ Attacks Detected</div><div class="card-value" id="statAttacks">0</div></div>
+            <div class="card purple"><div class="card-title">🎭 Honeypot Triggers</div><div class="card-value" id="statHoneypot">0</div></div>
+            <div class="card green"><div class="card-title">🧬 Immunity Rules</div><div class="card-value" id="statImmunity">0</div></div>
+            <div class="card orange"><div class="card-title">🔗 Blockchain Blocks</div><div class="card-value" id="statBlocks">0</div></div>
+        </div>
+
+        <!-- Connected Clients -->
+        <div style="margin-bottom: 30px;">
+            <div class="section-header"><div class="section-title">🔗 Connected Client Devices</div><span style="color:var(--text-dim)" id="clientCount">0 Online</span></div>
+            <div class="client-list" id="clientList">
+                <!-- Clients injected here -->
+            </div>
+        </div>
+
+        <!-- Events Stream -->
+        <div class="events-container">
+            <div class="events-header"><span>📡 Real-Time Event Stream</span><span style="color:var(--red); font-size:0.8rem;">● LIVE</span></div>
+            <div class="events-list" id="eventsList">
+                <div style="text-align:center; padding:20px; color:var(--text-dim);">Waiting for events...</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Connect to Server
+    const socket = io('http://10.68.101.105:5000', {
+        reconnection: true,
+        reconnectionAttempts: 999,
+        reconnectionDelay: 1000
+    });
+    
+    let stats = { attacks: 0, honeypot: 0, immunity: 0, blocks: 0 };
+    
+    // ================= UPTIME COUNTER =================
+    let dashboardStartTime = Date.now();
+    
+    function updateUptime() {
+        const uptimeEl = document.getElementById('uptime');
+        if (!uptimeEl) return;
+        
+        const now = Date.now();
+        const elapsedSeconds = Math.floor((now - dashboardStartTime) / 1000);
+        
+        const hours = Math.floor(elapsedSeconds / 3600).toString().padStart(2, '0');
+        const minutes = Math.floor((elapsedSeconds % 3600) / 60).toString().padStart(2, '0');
+        const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
+        
+        uptimeEl.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+    
+    // Update uptime immediately and then every second
+    updateUptime();
+    setInterval(updateUptime, 1000);
+    
+    // ================= LAST UPDATED TIMESTAMP =================
+    function updateLastUpdated() {
+        const el = document.getElementById('lastUpdated');
+        if (!el) return;
+        
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+        el.textContent = timeString;
+    }
+    
+    // Update every 30 seconds
+    setInterval(updateLastUpdated, 30000);
+    
+    // ================= UI UPDATES =================
+    const updateStatus = (connected) => {
+        const el = document.getElementById('connectionStatus');
+        el.className = `status-badge ${connected ? 'online' : 'offline'}`;
+        el.innerHTML = `<div class="pulse"></div> ${connected ? 'Connected' : 'Disconnected'}`;
+    };
+
+    const renderClients = (clients) => {
+        const list = document.getElementById('clientList');
+        const countEl = document.getElementById('clientCount');
+        if (countEl) countEl.innerText = `${clients.length} Online`;
+        
+        if (!list) return;
+        
+        if (!clients || clients.length === 0) {
+            list.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-dim);padding:40px;">No clients connected</div>';
+            return;
+        }
+        
+        list.innerHTML = clients.map(c => `
+            <div class="client-card">
+                <div class="client-icon">💻</div>
+                <div class="client-info">
+                    <div class="client-name">${c.name}</div>
+                    <div class="client-ip">${c.ip}</div>
+                </div>
+                <div class="status-dot"></div>
+            </div>
+        `).join('');
+    };
+
+    const addEvent = (type, ip, msg) => {
+    const list = document.getElementById('eventsList');
+    if (!list) return;
+    
+    if (list.querySelector('div[style*="text-align:center"]')) {
+        list.innerHTML = '';
+    }
+    
+    const time = new Date().toLocaleTimeString();
+    const div = document.createElement('div');
+    div.className = `event-item ${type}`;
+    
+    // Determine severity based on event type
+    let severity = 'info';
+    let severityText = 'INFO';
+    
+    if (type === 'attack') {
+        severity = 'low';
+        severityText = 'LOW';
+    } else if (type === 'honeypot') {
+        severity = 'medium';
+        severityText = 'MEDIUM';
+    } else if (type === 'immunity') {
+        severity = 'high';
+        severityText = 'HIGH';
+    } else if (type === 'blockchain') {
+        severity = 'critical';
+        severityText = 'CRITICAL';
+    } else if (type === 'system') {
+        severity = 'info';
+        severityText = 'SYSTEM';
+    }
+    
+    div.innerHTML = `
+        <span class="severity-badge ${severity}">${severityText}</span>
+        <span class="event-time">${time}</span>
+        <strong>${ip}</strong>: ${msg}
+    `;
+    
+    list.insertBefore(div, list.firstChild);
+    
+    // Keep only last 50 events
+    while (list.children.length > 50) {
+        list.removeChild(list.lastChild);
+    }
+    
+    // Update timestamp when event occurs
+    updateLastUpdated();
+};
+
+    // ================= SOCKET EVENTS =================
+    socket.on('connect', () => {
+        console.log('✅ Connected to server');
+        updateStatus(true);
+        socket.emit('register_device', { name: 'Admin Dashboard' });
+        addEvent('system', 'System', 'Dashboard Connected');
+        updateLastUpdated();
+        // Reset uptime on reconnect
+        dashboardStartTime = Date.now();
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('❌ Disconnected from server');
+        updateStatus(false);
+    });
+    
+    socket.on('connect_error', (error) => {
+        console.error('❌ Connection error:', error);
+    });
+    
+    socket.on('clients_update', (clients) => {
+        console.log('📊 Clients update:', clients);
+        renderClients(clients);
+    });
+
+    socket.on('attack_detected', (data) => {
+        stats.attacks++;
+        const el = document.getElementById('statAttacks');
+        if (el) el.innerText = stats.attacks;
+        addEvent('attack', data.ip, data.message);
+        updateLastUpdated();
+    });
+    
+    socket.on('honeypot_triggered', (data) => {
+        stats.honeypot++;
+        const el = document.getElementById('statHoneypot');
+        if (el) el.innerText = stats.honeypot;
+        addEvent('honeypot', data.ip, data.message);
+        updateLastUpdated();
+    });
+    
+    socket.on('immunity_generated', (data) => {
+        stats.immunity++;
+        const el = document.getElementById('statImmunity');
+        if (el) el.innerText = stats.immunity;
+        addEvent('immunity', data.ip, data.message);
+        updateLastUpdated();
+    });
+    
+    socket.on('blockchain_updated', (data) => {
+        stats.blocks++;
+        const el = document.getElementById('statBlocks');
+        if (el) el.innerText = stats.blocks;
+        addEvent('blockchain', data.ip, data.message);
+        updateLastUpdated();
+    });
+    
+    // Log when script loads
+    console.log('📜 Dashboard script loaded');
+    console.log('⏱️ Uptime counter started');
+</script>
+</body>
+</html>
