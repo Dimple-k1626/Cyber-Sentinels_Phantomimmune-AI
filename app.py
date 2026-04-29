@@ -1,144 +1,110 @@
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit
 from datetime import datetime
-import hashlib, json, sys
+import hashlib, json
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'phantomimmune-secret'
+app.config['SECRET_KEY'] = 'phantomimmune-pro'
+# CORS enabled for dashboard communication
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
-# ================= BLOCKCHAIN MODULE =================
-blockchain = []
-
-def create_block(index, timestamp, data, previous_hash):
-    block = {
-        "index": index,
-        "timestamp": timestamp,
-        "data": data,
-        "previous_hash": previous_hash
-    }
-    block_hash = hashlib.sha256(json.dumps(block, sort_keys=True).encode()).hexdigest()
-    block["hash"] = block_hash
-    return block
-
-def add_block(data):
-    previous_hash = blockchain[-1]["hash"] if blockchain else "0"
-    index = len(blockchain)
-    timestamp = datetime.now().isoformat()
-    new_block = create_block(index, timestamp, data, previous_hash)
-    blockchain.append(new_block)
-    print("[BLOCKCHAIN] New block added", flush=True)
-    socketio.emit('blockchain_updated', {
-        "ip": "system",
-        "message": f"Block {index} added to PhantomImmune AI blockchain",
-        "block": new_block
-    })
-    return new_block
-# =====================================================
-
-# State tracking
-request_count = {}
-honeypot_ips = set()
-blocked_ips = set()
+# ================= GLOBAL STATE =================
+connected_clients = {}    # Tracks live socket connections
+request_counts = {}       # Tracks attack attempts per IP
+blocked_ips = set()       # IPs permanently banned
+blockchain = []           # Immutable log of immunity rules
 
 HONEYPOT_THRESHOLD = 3
 IMMUNITY_THRESHOLD = 6
 
-def log_honeypot(ip, payload, attempts):
-    entry = {
-        "ip": ip,
-        "payload": payload,
-        "attempts": attempts,
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+# ================= BLOCKCHAIN MODULE =================
+def create_block(data):
+    prev_hash = blockchain[-1]["hash"] if blockchain else "0"
+    block = {
+        "index": len(blockchain),
+        "timestamp": datetime.now().isoformat(),
+        "data": data,
+        "previous_hash": prev_hash
     }
-    print("\n🪤 HONEYPOT LOG", flush=True)
-    print(f"📍 Attacker IP   : {ip}", flush=True)
-    print(f"🔢 Attempt Count : {attempts}", flush=True)
-    print(f"📦 Payload       : {payload}", flush=True)
-    print(f"🕒 Timestamp     : {entry['timestamp']}", flush=True)
-    print(f"🟢 Status        : Serving fake admin response", flush=True)
-    print("="*40 + "\n", flush=True)
-
-def generate_immunity(ip):
-    rule = {"action": "block_ip", "ip": ip}
-    blocked_ips.add(ip)
-    print(f"\n[IMMUNITY] Generated for IP: {ip}", flush=True)
-    print(f"📜 Rule Applied  : {rule}", flush=True)
-    add_block(rule)
-    socketio.emit('immunity_generated', {
-        "ip": ip,
-        "message": f"PhantomImmune AI rule generated and IP blocked",
-        "rule": rule
+    # Generate Hash
+    block["hash"] = hashlib.sha256(json.dumps(block, sort_keys=True).encode()).hexdigest()
+    blockchain.append(block)
+    
+    # Emit to Dashboard
+    socketio.emit('blockchain_updated', {
+        "ip": "system",
+        "message": f"Block {block['index']} added - IP {data.get('ip', 'unknown')} blocked"
     })
-    print("="*40 + "\n", flush=True)
-    return rule
 
-@app.route('/login', methods=['POST'])
-def login():
-    ip = request.remote_addr
-    payload = request.get_json(silent=True) or request.form.to_dict() or request.get_data(as_text=True)
-    
-    request_count[ip] = request_count.get(ip, 0) + 1
-    attempts = request_count[ip]
-    
-    if ip in blocked_ips:
-        print(f"🚫 BLOCKED: {ip} attempted access but immunity is active", flush=True)
-        socketio.emit('attack_detected', {
-            "ip": ip,
-            "message": f"Blocked IP attempted access (attempt #{attempts})"
-        })
-        return jsonify({"status": "error", "msg": "IP blocked by PhantomImmune AI"}), 403
-    
-    if attempts > IMMUNITY_THRESHOLD:
-        if ip not in blocked_ips:
-            generate_immunity(ip)
-        return jsonify({"status": "error", "msg": "IP blocked by PhantomImmune AI"}), 403
-    
-    if attempts > HONEYPOT_THRESHOLD:
-        if ip not in honeypot_ips:
-            honeypot_ips.add(ip)
-            print(f"👁️  IP {ip} crossed threshold ({HONEYPOT_THRESHOLD}). Entering honeypot mode...", flush=True)
-            socketio.emit('honeypot_triggered', {
-                "ip": ip,
-                "message": f"IP entered PhantomImmune AI honeypot after {attempts} requests",
-                "payload": payload
-            })
-        log_honeypot(ip, payload, attempts)
-        return jsonify({"status": "success", "msg": "Welcome Admin"}), 200
-    
-    print(f"📝 Normal request from {ip} (Attempt {attempts}/{HONEYPOT_THRESHOLD})", flush=True)
-    socketio.emit('attack_detected', {
-        "ip": ip,
-        "message": f"Suspicious request detected (attempt {attempts}/{HONEYPOT_THRESHOLD})"
-    })
-    return jsonify({"status": "failed", "msg": "Invalid credentials"}), 401
-
-@app.route('/blockchain', methods=['GET'])
-def get_blockchain():
-    return jsonify({"chain": blockchain, "length": len(blockchain)}), 200
-
-@app.route('/status', methods=['GET'])
-def status():
-    return jsonify({
-        "total_ips_tracked": len(request_count),
-        "active_honeypot_ips": len(honeypot_ips),
-        "blocked_ips": list(blocked_ips),
-        "blockchain_blocks": len(blockchain)
-    }), 200
-
+# ================= CLIENT TRACKING (SOCKET.IO) =================
 @socketio.on('connect')
-def handle_connect():
-    print("🔌 Client connected to PhantomImmune AI SocketIO", flush=True)
-    emit('connected', {"message": "Connected to PhantomImmune AI"})
+def on_connect():
+    ip = request.remote_addr
+    if ip not in connected_clients:
+        connected_clients[ip] = {"ip": ip, "name": "New Device", "status": "Online"}
+        # Broadcast updated list to ALL dashboards
+        socketio.emit('clients_update', list(connected_clients.values()))
+        print(f"🔌 Client Connected: {ip}")
 
 @socketio.on('disconnect')
-def handle_disconnect():
-    print("🔌 Client disconnected from PhantomImmune AI SocketIO", flush=True)
+def on_disconnect():
+    ip = request.remote_addr
+    if ip in connected_clients:
+        del connected_clients[ip]
+        socketio.emit('clients_update', list(connected_clients.values()))
+        print(f"🔌 Client Disconnected: {ip}")
 
+@socketio.on('register_device')
+def on_register(data):
+    ip = request.remote_addr
+    if ip in connected_clients:
+        connected_clients[ip]['name'] = data.get('name', 'Unknown Device')
+        socketio.emit('clients_update', list(connected_clients.values()))
+        print(f"📱 Device Registered: {connected_clients[ip]['name']}")
+
+# ================= MAIN SECURITY GATEWAY =================
+@app.route('/login', methods=['POST'])
+@app.route('/api/data', methods=['POST'])
+def security_gateway():
+    ip = request.remote_addr
+    request_counts[ip] = request_counts.get(ip, 0) + 1
+    attempts = request_counts[ip]
+
+    # 1. 🔒 IMMUNITY TRIGGER (Attempts > 6)
+    if attempts > IMMUNITY_THRESHOLD:
+        if ip not in blocked_ips:
+            blocked_ips.add(ip)
+            create_block({"action": "block_ip", "ip": ip})
+            socketio.emit('immunity_generated', {
+                "ip": ip,
+                "message": f"🛡️ IMMUNITY ACTIVATED: {ip} is permanently blocked."
+            })
+        return jsonify({"error": "Access Denied by PhantomImmune AI"}), 403
+
+    # 2. 🎭 HONEYPOT TRAP (Attempts 4, 5, 6)
+    if attempts > HONEYPOT_THRESHOLD:
+        socketio.emit('honeypot_triggered', {
+            "ip": ip,
+            "message": f"🕸️ HONEYPOT TRIGGERED: {ip} is trapped in a fake system."
+        })
+        return jsonify({"status": "success", "msg": "Welcome Admin (Fake Response)"}), 200
+
+    # 3. ⚠️ NORMAL ATTACK (Attempts 1, 2, 3)
+    socketio.emit('attack_detected', {
+        "ip": ip,
+        "message": f"🚨 Attack Detected: Failed login attempt #{attempts}"
+    })
+    
+    return jsonify({"status": "failed", "msg": "Invalid Credentials"}), 401
+
+# ================= RUN SERVER =================
 if __name__ == '__main__':
-    print("\n" + "="*50, flush=True)
-    print("🛡️  PHANTOMIMMUNE AI - REAL-TIME HONEYPOT", flush=True)
-    print("="*50, flush=True)
-    print("📡 SocketIO enabled on port 5000", flush=True)
-    print("="*50 + "\n", flush=True)
+    print("\n" + "="*60)
+    print("🛡️  PHANTOMIMMUNE AI - CYBER IMMUNE SYSTEM")
+    print("="*60)
+    print("✅ Server running on http://0.0.0.0:5000")
+    print("✅ Dashboard: Open dashboard.html")
+    print("✅ Client: Run client.py to see devices connect")
+    print("="*60 + "\n")
+    
     socketio.run(app, host='0.0.0.0', port=5000, debug=False)
