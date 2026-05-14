@@ -1,13 +1,17 @@
-from flask import Flask, request, jsonify
+
+from flask import Flask, request, jsonify, render_template
 from flask_socketio import SocketIO
 from datetime import datetime
 import hashlib
 import json
+import os
 
+# ================= APP SETUP =================
 app = Flask(__name__)
+
 app.config['SECRET_KEY'] = 'phantomimmune-pro'
 
-# SocketIO Setup
+# ================= SOCKETIO SETUP =================
 socketio = SocketIO(
     app,
     cors_allowed_origins="*",
@@ -26,13 +30,11 @@ IMMUNITY_THRESHOLD = 6
 # ================= HOME ROUTE =================
 @app.route("/")
 def home():
-    return """
-    <h1>🛡️ PHANTOMIMMUNE AI</h1>
-    <h2>Cyber Immune System Running Successfully</h2>
-    """
+    return render_template("dashboard.html")
 
 # ================= BLOCKCHAIN MODULE =================
 def create_block(data):
+
     prev_hash = blockchain[-1]["hash"] if blockchain else "0"
 
     block = {
@@ -56,9 +58,9 @@ def create_block(data):
 # ================= SOCKET EVENTS =================
 @socketio.on('connect')
 def on_connect():
+
     ip = request.remote_addr
 
-    # Prevent duplicate entries
     if ip not in connected_clients:
         connected_clients[ip] = {
             "ip": ip,
@@ -72,6 +74,7 @@ def on_connect():
 
 @socketio.on('disconnect')
 def on_disconnect():
+
     ip = request.remote_addr
 
     if ip in connected_clients:
@@ -83,9 +86,9 @@ def on_disconnect():
 
 @socketio.on('register_device')
 def on_register(data):
+
     ip = request.remote_addr
 
-    # Create entry safely if missing
     if ip not in connected_clients:
         connected_clients[ip] = {
             "ip": ip,
@@ -162,14 +165,16 @@ def security_gateway():
 if __name__ == '__main__':
 
     print("\n" + "=" * 60)
-    print("🛡️  PHANTOMIMMUNE AI - CYBER IMMUNE SYSTEM")
+    print("🛡️ PHANTOMIMMUNE AI - CYBER IMMUNE SYSTEM")
     print("=" * 60)
-    print("✅ Server running on http://127.0.0.1:5000")
+    print("✅ Server Running Successfully")
     print("=" * 60 + "\n")
+
+    port = int(os.environ.get("PORT", 5000))
 
     socketio.run(
         app,
         host='0.0.0.0',
-        port=5000,
+        port=port,
         debug=False
     )
