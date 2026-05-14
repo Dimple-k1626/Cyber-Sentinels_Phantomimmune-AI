@@ -6,7 +6,7 @@ Run this alongside your mobile (Termux) attack to test multi-IP detection.
 import requests, time, sys
 
 # ⚠️ UPDATE THIS IF YOUR SERVER IP CHANGED
-TARGET = "http://10.68.101.105:5000/login"
+TARGET = "http://10.30.136.65:5000/login"
 ATTEMPTS = 8
 
 print("\n" + "="*55)
