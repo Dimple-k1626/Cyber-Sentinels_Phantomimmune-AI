@@ -61,64 +61,6 @@
         .event-item.immunity { border-color: var(--green); background: rgba(16, 185, 129, 0.1); }
         .event-item.blockchain { border-color: var(--orange); }
         .event-time { float: right; color: var(--text-dim); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; }
-
-        /* Severity Badges */
-.severity-badge {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-right: 10px;
-    border: 1px solid;
-}
-
-.severity-badge.critical {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
-    border-color: #ef4444;
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
-}
-
-.severity-badge.high {
-    background: rgba(245, 158, 11, 0.15);
-    color: #f59e0b;
-    border-color: #f59e0b;
-    box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-}
-
-.severity-badge.medium {
-    background: rgba(139, 92, 246, 0.15);
-    color: #8b5cf6;
-    border-color: #8b5cf6;
-    box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
-}
-
-.severity-badge.low {
-    background: rgba(6, 182, 212, 0.15);
-    color: #06b6d4;
-    border-color: #06b6d4;
-    box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
-}
-
-.severity-badge.info {
-    background: rgba(16, 185, 129, 0.15);
-    color: #10b981;
-    border-color: #10b981;
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
-}
-
-/* Pulse animation for critical badges */
-@keyframes badgePulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-}
-
-.severity-badge.critical {
-    animation: badgePulse 2s infinite;
-}
     </style>
 </head>
 <body>
@@ -126,30 +68,7 @@
         <header>
             <h1>🛡️ PhantomImmune AI</h1>
             <div id="connectionStatus" class="status-badge offline"><div class="pulse"></div> Disconnected</div>
-            
         </header>
-        <!-- Last Updated Timestamp -->
-<div style="display: flex; justify-content: space-between; align-items: center; 
-            padding: 12px 20px; margin-bottom: 20px; 
-            background: rgba(255,255,255,0.03); 
-            border: 1px solid var(--border); 
-            border-radius: 10px; 
-            font-size: 0.85rem;">
-    
-    <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="width: 8px; height: 8px; border-radius: 50%; 
-                     background: var(--green); 
-                     animation: pulse 1.5s infinite;"></span>
-        <span style="color: var(--text-dim);">Monitoring active</span>
-    </div>
-    
-    <div style="color: var(--text-dim);">
-        Last updated: <strong id="lastUpdated" style="color: var(--text); font-family: 'JetBrains Mono', monospace;">--:--:--</strong>
-    </div>
-    <span style="color: var(--text-dim); margin-left: 20px; border-left: 1px solid var(--border); padding-left: 20px;">
-    Uptime: <strong id="uptime" style="color: var(--cyan); font-family: 'JetBrains Mono', monospace;">00:00:00</strong>
-</span>
-</div>
 
         <!-- Stats Grid -->
         <div class="grid">
@@ -176,196 +95,68 @@
         </div>
     </div>
 
-<script>
-    // Connect to Server
-    const socket = io('http://10.68.101.105:5000', {
-        reconnection: true,
-        reconnectionAttempts: 999,
-        reconnectionDelay: 1000
-    });
-    
-    let stats = { attacks: 0, honeypot: 0, immunity: 0, blocks: 0 };
-    
-    // ================= UPTIME COUNTER =================
-    let dashboardStartTime = Date.now();
-    
-    function updateUptime() {
-        const uptimeEl = document.getElementById('uptime');
-        if (!uptimeEl) return;
-        
-        const now = Date.now();
-        const elapsedSeconds = Math.floor((now - dashboardStartTime) / 1000);
-        
-        const hours = Math.floor(elapsedSeconds / 3600).toString().padStart(2, '0');
-        const minutes = Math.floor((elapsedSeconds % 3600) / 60).toString().padStart(2, '0');
-        const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
-        
-        uptimeEl.textContent = `${hours}:${minutes}:${seconds}`;
-    }
-    
-    // Update uptime immediately and then every second
-    updateUptime();
-    setInterval(updateUptime, 1000);
-    
-    // ================= LAST UPDATED TIMESTAMP =================
-    function updateLastUpdated() {
-        const el = document.getElementById('lastUpdated');
-        if (!el) return;
-        
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        });
-        el.textContent = timeString;
-    }
-    
-    // Update every 30 seconds
-    setInterval(updateLastUpdated, 30000);
-    
-    // ================= UI UPDATES =================
-    const updateStatus = (connected) => {
-        const el = document.getElementById('connectionStatus');
-        el.className = `status-badge ${connected ? 'online' : 'offline'}`;
-        el.innerHTML = `<div class="pulse"></div> ${connected ? 'Connected' : 'Disconnected'}`;
-    };
+    <script>
+        // Connect to Server
+        const socket = io()
+        let stats = { attacks: 0, honeypot: 0, immunity: 0, blocks: 0 };
 
-    const renderClients = (clients) => {
-        const list = document.getElementById('clientList');
-        const countEl = document.getElementById('clientCount');
-        if (countEl) countEl.innerText = `${clients.length} Online`;
-        
-        if (!list) return;
-        
-        if (!clients || clients.length === 0) {
-            list.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-dim);padding:40px;">No clients connected</div>';
-            return;
-        }
-        
-        list.innerHTML = clients.map(c => `
-            <div class="client-card">
-                <div class="client-icon">💻</div>
-                <div class="client-info">
-                    <div class="client-name">${c.name}</div>
-                    <div class="client-ip">${c.ip}</div>
+        // UI Updates
+        const updateStatus = (connected) => {
+            const el = document.getElementById('connectionStatus');
+            el.className = `status-badge ${connected ? 'online' : 'offline'}`;
+            el.innerHTML = `<div class="pulse"></div> ${connected ? 'Connected' : 'Disconnected'}`;
+        };
+
+        const renderClients = (clients) => {
+            const list = document.getElementById('clientList');
+            document.getElementById('clientCount').innerText = `${clients.length} Online`;
+            list.innerHTML = clients.map(c => `
+                <div class="client-card">
+                    <div class="client-icon">💻</div>
+                    <div class="client-info">
+                        <div class="client-name">${c.name}</div>
+                        <div class="client-ip">${c.ip}</div>
+                    </div>
+                    <div class="status-dot"></div>
                 </div>
-                <div class="status-dot"></div>
-            </div>
-        `).join('');
-    };
+            `).join('');
+        };
 
-    const addEvent = (type, ip, msg) => {
-    const list = document.getElementById('eventsList');
-    if (!list) return;
-    
-    if (list.querySelector('div[style*="text-align:center"]')) {
-        list.innerHTML = '';
-    }
-    
-    const time = new Date().toLocaleTimeString();
-    const div = document.createElement('div');
-    div.className = `event-item ${type}`;
-    
-    // Determine severity based on event type
-    let severity = 'info';
-    let severityText = 'INFO';
-    
-    if (type === 'attack') {
-        severity = 'low';
-        severityText = 'LOW';
-    } else if (type === 'honeypot') {
-        severity = 'medium';
-        severityText = 'MEDIUM';
-    } else if (type === 'immunity') {
-        severity = 'high';
-        severityText = 'HIGH';
-    } else if (type === 'blockchain') {
-        severity = 'critical';
-        severityText = 'CRITICAL';
-    } else if (type === 'system') {
-        severity = 'info';
-        severityText = 'SYSTEM';
-    }
-    
-    div.innerHTML = `
-        <span class="severity-badge ${severity}">${severityText}</span>
-        <span class="event-time">${time}</span>
-        <strong>${ip}</strong>: ${msg}
-    `;
-    
-    list.insertBefore(div, list.firstChild);
-    
-    // Keep only last 50 events
-    while (list.children.length > 50) {
-        list.removeChild(list.lastChild);
-    }
-    
-    // Update timestamp when event occurs
-    updateLastUpdated();
-};
+        const addEvent = (type, ip, msg) => {
+            const list = document.getElementById('eventsList');
+            const time = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = `event-item ${type}`;
+            div.innerHTML = `<span class="event-time">${time}</span> <strong>${ip}</strong>: ${msg}`;
+            list.prepend(div);
+        };
 
-    // ================= SOCKET EVENTS =================
-    socket.on('connect', () => {
-        console.log('✅ Connected to server');
-        updateStatus(true);
-        socket.emit('register_device', { name: 'Admin Dashboard' });
-        addEvent('system', 'System', 'Dashboard Connected');
-        updateLastUpdated();
-        // Reset uptime on reconnect
-        dashboardStartTime = Date.now();
-    });
-    
-    socket.on('disconnect', () => {
-        console.log('❌ Disconnected from server');
-        updateStatus(false);
-    });
-    
-    socket.on('connect_error', (error) => {
-        console.error('❌ Connection error:', error);
-    });
-    
-    socket.on('clients_update', (clients) => {
-        console.log('📊 Clients update:', clients);
-        renderClients(clients);
-    });
+        // Socket Events
+        socket.on('connect', () => {
+            updateStatus(true);
+            socket.emit('register_device', { name: 'Admin Dashboard' });
+            addEvent('system', 'System', 'Dashboard Connected');
+        });
+        socket.on('disconnect', () => updateStatus(false));
+        
+        socket.on('clients_update', (clients) => renderClients(clients));
 
-    socket.on('attack_detected', (data) => {
-        stats.attacks++;
-        const el = document.getElementById('statAttacks');
-        if (el) el.innerText = stats.attacks;
-        addEvent('attack', data.ip, data.message);
-        updateLastUpdated();
-    });
-    
-    socket.on('honeypot_triggered', (data) => {
-        stats.honeypot++;
-        const el = document.getElementById('statHoneypot');
-        if (el) el.innerText = stats.honeypot;
-        addEvent('honeypot', data.ip, data.message);
-        updateLastUpdated();
-    });
-    
-    socket.on('immunity_generated', (data) => {
-        stats.immunity++;
-        const el = document.getElementById('statImmunity');
-        if (el) el.innerText = stats.immunity;
-        addEvent('immunity', data.ip, data.message);
-        updateLastUpdated();
-    });
-    
-    socket.on('blockchain_updated', (data) => {
-        stats.blocks++;
-        const el = document.getElementById('statBlocks');
-        if (el) el.innerText = stats.blocks;
-        addEvent('blockchain', data.ip, data.message);
-        updateLastUpdated();
-    });
-    
-    // Log when script loads
-    console.log('📜 Dashboard script loaded');
-    console.log('⏱️ Uptime counter started');
-</script>
+        socket.on('attack_detected', (data) => {
+            stats.attacks++; document.getElementById('statAttacks').innerText = stats.attacks;
+            addEvent('attack', data.ip, data.message);
+        });
+        socket.on('honeypot_triggered', (data) => {
+            stats.honeypot++; document.getElementById('statHoneypot').innerText = stats.honeypot;
+            addEvent('honeypot', data.ip, data.message);
+        });
+        socket.on('immunity_generated', (data) => {
+            stats.immunity++; document.getElementById('statImmunity').innerText = stats.immunity;
+            addEvent('immunity', data.ip, data.message);
+        });
+        socket.on('blockchain_updated', (data) => {
+            stats.blocks++; document.getElementById('statBlocks').innerText = stats.blocks;
+            addEvent('blockchain', data.ip, data.message);
+        });
+    </script>
 </body>
 </html>
